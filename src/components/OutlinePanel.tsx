@@ -2,6 +2,7 @@
 import React from 'react';
 import { Hash, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TextElement {
   id: string;
@@ -74,6 +75,7 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
                 className="ml-6 flex items-center gap-2 p-1 rounded-md hover:bg-blue-50 cursor-pointer transition-colors"
                 onClick={() => onScrollToBlock(paragraph.id)}
               >
+                <Checkbox className="flex-shrink-0" />
                 <FileText className="w-3 h-3 text-blue-600" />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-blue-700">
@@ -92,6 +94,7 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
             className="flex items-center gap-2 p-2 rounded-md hover:bg-blue-50 cursor-pointer transition-colors mb-1"
             onClick={() => onScrollToBlock(block.id)}
           >
+            <Checkbox className="flex-shrink-0" />
             <FileText className="w-4 h-4 text-blue-600" />
             <div className="flex-1 min-w-0">
               <div className="text-sm text-blue-700">
