@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Hash, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TextElement {
   id: string;
@@ -37,6 +37,33 @@ const APPLIED_COLORS = [
   { bg: 'bg-cyan-50 dark:bg-cyan-900/20', ring: 'ring-cyan-300 dark:ring-cyan-700', text: 'text-cyan-700 dark:text-cyan-300', icon: 'text-cyan-600 dark:text-cyan-400' }
 ];
 
+// Opciones de idiomas
+const LANGUAGE_OPTIONS = [
+  { value: 'english', label: 'Inglés: "Julius Caesar?" – Multilingual v1' },
+  { value: 'spanish', label: 'Español: "Julius Caesar?" – Multilingual v1' },
+  { value: 'french', label: 'Francés: "Julius Caesar?" – Multilingual v1' },
+  { value: 'german', label: 'Alemán: "Julius Caesar?" – Multilingual v1' },
+  { value: 'italian', label: 'Italiano: "Julius Caesar?" – Multilingual v1' },
+  { value: 'polish', label: 'Polaco: "Julius Caesar?" – Multilingual v1' },
+  { value: 'portuguese', label: 'Portugués: "Julius Caesar?" – Multilingual v1' },
+  { value: 'arabic', label: 'Árabe: "Julius Caesar?" – Multilingual v1' },
+  { value: 'hindi', label: 'Hindi: "Julius Caesar?" – Multilingual v1' },
+  { value: 'japanese', label: 'Japonés: "Julius Caesar?" – Multilingual v2' },
+  { value: 'korean', label: 'Coreano: "Julius Caesar?" – Multilingual v2' },
+  { value: 'chinese', label: 'Chino: "Julius Caesar?" – Multilingual v2' },
+  { value: 'turkish', label: 'Turco: "Julius Caesar?" – Multilingual v2' },
+  { value: 'romanian', label: 'Rumano: "Julius Caesar?" – Multilingual v2' },
+  { value: 'dutch', label: 'Holandés: "Julius Caesar?" – Multilingual v2' },
+  { value: 'greek', label: 'Griego: "Julius Caesar?" – Multilingual v2' },
+  { value: 'vietnamese', label: 'Vietnamita: "Julius Caesar?" – Multilingual v2' },
+  { value: 'bulgarian', label: 'Búlgaro: "Julius Caesar?" – Multilingual v2' },
+  { value: 'finnish', label: 'Finlandés: "Julius Caesar?" – Multilingual v2' },
+  { value: 'croatian', label: 'Croata: "Julius Caesar?" – Multilingual v2' },
+  { value: 'swedish', label: 'Sueco: "Julius Caesar?" – Multilingual v2' },
+  { value: 'norwegian', label: 'Noruego: "Julius Caesar?" – Multilingual v2' },
+  { value: 'danish', label: 'Danés: "Julius Caesar?" – Multilingual v2' }
+];
+
 const OutlinePanel: React.FC<OutlinePanelProps> = ({ 
   textBlocks, 
   onScrollToBlock, 
@@ -44,6 +71,8 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
   selectedParagraphs,
   onToggleParagraphSelection
 }) => {
+  const [selectedLanguage, setSelectedLanguage] = React.useState<string>('spanish');
+
   // Función para obtener el color de un párrafo aplicado
   const getAppliedColor = (paragraph: TextElement) => {
     if (!paragraph.applied || !paragraph.appliedColor) {
@@ -223,14 +252,33 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
 
   return (
     <Card className="h-full flex flex-col shadow-lg bg-card text-card-foreground backdrop-blur-sm overflow-hidden">
-      <div className="flex items-center gap-2 p-4 pb-2 flex-shrink-0">
-        <Hash className="w-5 h-5 text-foreground" />
-        <h2 className="text-lg font-semibold text-foreground">Vista General</h2>
-        {selectedParagraphs.size > 0 && (
-          <div className="ml-auto bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs font-medium">
-            {selectedParagraphs.size} seleccionados
-          </div>
-        )}
+      <div className="flex flex-col gap-3 p-4 pb-2 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <Hash className="w-5 h-5 text-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">Vista General</h2>
+          {selectedParagraphs.size > 0 && (
+            <div className="ml-auto bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs font-medium">
+              {selectedParagraphs.size} seleccionados
+            </div>
+          )}
+        </div>
+        
+        {/* Language Selector */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Idioma:</label>
+          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona un idioma" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              {LANGUAGE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <div className="flex-1 overflow-hidden">
