@@ -100,7 +100,7 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
       console.log('Body:', requestBody);
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 300 seconds timeout
 
       const response = await fetch(apiUrl, {
         method: requestMethod,
@@ -171,7 +171,7 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
 
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          errorMessage = 'Timeout: La petición tardó más de 30 segundos';
+          errorMessage = 'Timeout: La petición tardó más de 5 minutos';
           errorDetails = 'La API no respondió a tiempo. Verifica que la URL sea correcta y que el servidor esté funcionando.';
         } else if (error.message === 'Failed to fetch') {
           errorMessage = 'Error de conexión (CORS/Red)';
