@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Hash, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -50,7 +49,7 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
               className="flex items-center gap-2 p-2 rounded-md hover:bg-blue-100 cursor-pointer transition-colors"
               onClick={() => onScrollToBlock(block.id)}
             >
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {isCollapsed ? (
                   <ChevronRight className="w-3 h-3 text-amber-600" />
                 ) : (
@@ -58,7 +57,7 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
                 )}
                 <Hash className="w-4 h-4 text-amber-600" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 overflow-hidden">
                 <div className="font-semibold text-sm text-amber-800 truncate">
                   Título {block.titleNumber}
                 </div>
@@ -76,9 +75,9 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
                 onClick={() => onScrollToBlock(paragraph.id)}
               >
                 <Checkbox className="flex-shrink-0" />
-                <FileText className="w-3 h-3 text-blue-600" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs text-blue-700">
+                <FileText className="w-3 h-3 text-blue-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div className="text-xs text-blue-700 truncate">
                     Párrafo {paragraph.number} ({paragraph.text.length} caracteres)
                   </div>
                 </div>
@@ -95,12 +94,12 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
             onClick={() => onScrollToBlock(block.id)}
           >
             <Checkbox className="flex-shrink-0" />
-            <FileText className="w-4 h-4 text-blue-600" />
-            <div className="flex-1 min-w-0">
-              <div className="text-sm text-blue-700">
+            <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <div className="text-sm text-blue-700 truncate">
                 Párrafo {block.number}
               </div>
-              <div className="text-xs text-blue-500">
+              <div className="text-xs text-blue-500 truncate">
                 {block.text.length} caracteres
               </div>
             </div>
@@ -113,21 +112,25 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
   };
 
   return (
-    <Card className="h-full p-4 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
-      <div className="flex items-center gap-2 mb-4">
+    <Card className="h-full flex flex-col shadow-lg border-0 bg-white/90 backdrop-blur-sm overflow-hidden">
+      <div className="flex items-center gap-2 p-4 pb-2 flex-shrink-0">
         <Hash className="w-5 h-5 text-gray-700" />
         <h2 className="text-lg font-semibold text-gray-800">Vista General</h2>
       </div>
       
-      <div className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
-        {textBlocks.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Hash className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Sin contenido</p>
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto px-4 pb-4">
+          <div className="space-y-1">
+            {textBlocks.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Hash className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Sin contenido</p>
+              </div>
+            ) : (
+              renderOutlineItems()
+            )}
           </div>
-        ) : (
-          renderOutlineItems()
-        )}
+        </div>
       </div>
     </Card>
   );
