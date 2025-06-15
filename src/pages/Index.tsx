@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Plus, Download, Upload, Eye, EyeOff, Trash2, Copy } from 'lucide-react';
+import { FileText, Plus, Download, Upload, Eye, EyeOff, Trash2, Copy, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -22,8 +21,37 @@ const Index = () => {
   const [originalText, setOriginalText] = useState('');
   const [textBlocks, setTextBlocks] = useState<TextElement[]>([]);
   const [collapsedTitles, setCollapsedTitles] = useState<Set<string>>(new Set());
+  const [selectedParagraphs, setSelectedParagraphs] = useState<Set<string>>(new Set());
+  const [showSelectionPopup, setShowSelectionPopup] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const blockRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Calculate total characters for selected paragraphs
+  const getSelectedCharacterCount = () => {
+    return textBlocks
+      .filter(block => selectedParagraphs.has(block.id))
+      .reduce((total, block) => total + block.text.length, 0);
+  };
+
+  // Toggle paragraph selection
+  const toggleParagraphSelection = (paragraphId: string) => {
+    const newSelected = new Set(selectedParagraphs);
+    if (newSelected.has(paragraphId)) {
+      newSelected.delete(paragraphId);
+    } else {
+      newSelected.add(paragraphId);
+    }
+    setSelectedParagraphs(newSelected);
+    
+    // Show popup if any paragraphs are selected
+    setShowSelectionPopup(newSelected.size > 0);
+  };
+
+  // Clear all selections
+  const clearSelection = () => {
+    setSelectedParagraphs(new Set());
+    setShowSelectionPopup(false);
+  };
 
   // Scroll to specific block
   const scrollToBlock = (blockId: string) => {
@@ -156,6 +184,8 @@ const Index = () => {
     const numberedElements = updateNumbering(elements);
     setTextBlocks(numberedElements);
     setCollapsedTitles(new Set()); // Reset collapsed state
+    setSelectedParagraphs(new Set()); // Reset selection
+    setShowSelectionPopup(false);
     
     const titles = numberedElements.filter(el => el.isTitle).length;
     const paragraphs = numberedElements.length - titles;
@@ -196,6 +226,14 @@ const Index = () => {
       const newCollapsed = new Set(collapsedTitles);
       newCollapsed.delete(id);
       setCollapsedTitles(newCollapsed);
+    }
+
+    // Remove from selection if it was selected
+    if (selectedParagraphs.has(id)) {
+      const newSelected = new Set(selectedParagraphs);
+      newSelected.delete(id);
+      setSelectedParagraphs(newSelected);
+      setShowSelectionPopup(newSelected.size > 0);
     }
     
     toast({
@@ -271,6 +309,8 @@ const Index = () => {
     setOriginalText('');
     setTextBlocks([]);
     setCollapsedTitles(new Set());
+    setSelectedParagraphs(new Set());
+    setShowSelectionPopup(false);
     toast({ title: "Cleared", description: "All content cleared" });
   };
 
@@ -320,6 +360,8 @@ const Index = () => {
       const numberedElements = updateNumbering(elements);
       setTextBlocks(numberedElements);
       setCollapsedTitles(new Set());
+      setSelectedParagraphs(new Set());
+      setShowSelectionPopup(false);
       
       toast({ title: "Opened", description: "File opened and parsed successfully" });
     };
@@ -328,6 +370,38 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      {/* Selection Popup */}
+      {showSelectionPopup && (
+        <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg border p-4 min-w-[250px]">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-gray-800">Párrafos Seleccionados</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+              className="h-6 w-6 p-0"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Párrafos:</span>
+              <span className="font-medium">{selectedParagraphs.size}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Caracteres totales:</span>
+              <span className="font-medium text-blue-600">{getSelectedCharacterCount()}</span>
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t">
+            <div className="text-xs text-gray-500">
+              Selecciona párrafos desde el panel lateral para ver el conteo total
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main container with two-panel layout */}
       <div className="container mx-auto p-6 h-screen flex flex-col">
         {/* Header */}
@@ -361,6 +435,12 @@ const Index = () => {
             <Trash2 className="w-4 h-4" />
             Clear All
           </Button>
+          {selectedParagraphs.size > 0 && (
+            <Button onClick={clearSelection} variant="outline" className="gap-2">
+              <X className="w-4 h-4" />
+              Clear Selection ({selectedParagraphs.size})
+            </Button>
+          )}
         </div>
 
         <input
@@ -419,6 +499,7 @@ const Index = () => {
                       <div
                         key={block.id}
                         ref={(el) => setBlockRef(block.id, el)}
+                        className={selectedParagraphs.has(block.id) ? 'ring-2 ring-blue-400 rounded-lg' : ''}
                       >
                         <TextBlock
                           block={block}
@@ -443,6 +524,8 @@ const Index = () => {
               textBlocks={textBlocks}
               onScrollToBlock={scrollToBlock}
               collapsedTitles={collapsedTitles}
+              selectedParagraphs={selectedParagraphs}
+              onToggleParagraphSelection={toggleParagraphSelection}
             />
           </div>
         </div>

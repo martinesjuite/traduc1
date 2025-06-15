@@ -16,12 +16,16 @@ interface OutlinePanelProps {
   textBlocks: TextElement[];
   onScrollToBlock: (blockId: string) => void;
   collapsedTitles: Set<string>;
+  selectedParagraphs: Set<string>;
+  onToggleParagraphSelection: (paragraphId: string) => void;
 }
 
 const OutlinePanel: React.FC<OutlinePanelProps> = ({ 
   textBlocks, 
   onScrollToBlock, 
-  collapsedTitles 
+  collapsedTitles,
+  selectedParagraphs,
+  onToggleParagraphSelection
 }) => {
   const getAssociatedParagraphs = (titleIndex: number) => {
     const paragraphs = [];
@@ -71,10 +75,19 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
             {!isCollapsed && associatedParagraphs.map((paragraph) => (
               <div
                 key={paragraph.id}
-                className="ml-6 flex items-center gap-2 p-1 rounded-md hover:bg-blue-50 cursor-pointer transition-colors"
+                className={`ml-6 flex items-center gap-2 p-1 rounded-md hover:bg-blue-50 cursor-pointer transition-colors ${
+                  selectedParagraphs.has(paragraph.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
+                }`}
                 onClick={() => onScrollToBlock(paragraph.id)}
               >
-                <Checkbox className="flex-shrink-0" />
+                <Checkbox 
+                  className="flex-shrink-0" 
+                  checked={selectedParagraphs.has(paragraph.id)}
+                  onCheckedChange={(checked) => {
+                    onToggleParagraphSelection(paragraph.id);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
                 <FileText className="w-3 h-3 text-blue-600 flex-shrink-0" />
                 <div className="flex-1 min-w-0 overflow-hidden">
                   <div className="text-xs text-blue-700 truncate">
@@ -90,10 +103,19 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
         items.push(
           <div
             key={block.id}
-            className="flex items-center gap-2 p-2 rounded-md hover:bg-blue-50 cursor-pointer transition-colors mb-1"
+            className={`flex items-center gap-2 p-2 rounded-md hover:bg-blue-50 cursor-pointer transition-colors mb-1 ${
+              selectedParagraphs.has(block.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
+            }`}
             onClick={() => onScrollToBlock(block.id)}
           >
-            <Checkbox className="flex-shrink-0" />
+            <Checkbox 
+              className="flex-shrink-0" 
+              checked={selectedParagraphs.has(block.id)}
+              onCheckedChange={(checked) => {
+                onToggleParagraphSelection(block.id);
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
             <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
             <div className="flex-1 min-w-0 overflow-hidden">
               <div className="text-sm text-blue-700 truncate">
@@ -116,6 +138,11 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
       <div className="flex items-center gap-2 p-4 pb-2 flex-shrink-0">
         <Hash className="w-5 h-5 text-gray-700" />
         <h2 className="text-lg font-semibold text-gray-800">Vista General</h2>
+        {selectedParagraphs.size > 0 && (
+          <div className="ml-auto bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+            {selectedParagraphs.size} seleccionados
+          </div>
+        )}
       </div>
       
       <div className="flex-1 overflow-hidden">
