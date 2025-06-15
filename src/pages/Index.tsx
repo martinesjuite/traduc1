@@ -15,7 +15,8 @@ interface TextElement {
   number?: number;
   titleNumber?: number;
   visible: boolean;
-  applied?: boolean; // Nueva propiedad para marcar párrafos aplicados
+  applied?: boolean;
+  appliedColor?: string; // Nueva propiedad para el color asignado
 }
 
 const Index = () => {
@@ -62,12 +63,15 @@ const Index = () => {
       .join('\n\n');
     
     if (selectedTexts) {
+      // Generar un índice de color aleatorio
+      const randomColorIndex = Math.floor(Math.random() * 10).toString();
+      
       // Copy selected text to clipboard
       navigator.clipboard.writeText(selectedTexts).then(() => {
-        // Mark selected paragraphs as applied
+        // Mark selected paragraphs as applied with random color
         setTextBlocks(blocks => blocks.map(block => 
           selectedParagraphs.has(block.id) 
-            ? { ...block, applied: true }
+            ? { ...block, applied: true, appliedColor: randomColorIndex }
             : block
         ));
         
@@ -248,7 +252,7 @@ const Index = () => {
   // Update block text
   const updateBlockText = (id: string, newText: string) => {
     setTextBlocks(blocks => blocks.map(block => 
-      block.id === id ? { ...block, text: newText, applied: false } : block // Reset applied when text changes
+      block.id === id ? { ...block, text: newText, applied: false, appliedColor: undefined } : block // Reset applied and color when text changes
     ));
   };
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Hash, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -11,6 +12,7 @@ interface TextElement {
   titleNumber?: number;
   visible: boolean;
   applied?: boolean;
+  appliedColor?: string; // Nueva propiedad para el color asignado
 }
 
 interface OutlinePanelProps {
@@ -21,6 +23,20 @@ interface OutlinePanelProps {
   onToggleParagraphSelection: (paragraphId: string) => void;
 }
 
+// Array de colores para las aplicaciones
+const APPLIED_COLORS = [
+  { bg: 'bg-green-50', ring: 'ring-green-300', text: 'text-green-700', icon: 'text-green-600' },
+  { bg: 'bg-blue-50', ring: 'ring-blue-300', text: 'text-blue-700', icon: 'text-blue-600' },
+  { bg: 'bg-purple-50', ring: 'ring-purple-300', text: 'text-purple-700', icon: 'text-purple-600' },
+  { bg: 'bg-orange-50', ring: 'ring-orange-300', text: 'text-orange-700', icon: 'text-orange-600' },
+  { bg: 'bg-pink-50', ring: 'ring-pink-300', text: 'text-pink-700', icon: 'text-pink-600' },
+  { bg: 'bg-indigo-50', ring: 'ring-indigo-300', text: 'text-indigo-700', icon: 'text-indigo-600' },
+  { bg: 'bg-red-50', ring: 'ring-red-300', text: 'text-red-700', icon: 'text-red-600' },
+  { bg: 'bg-yellow-50', ring: 'ring-yellow-300', text: 'text-yellow-700', icon: 'text-yellow-600' },
+  { bg: 'bg-teal-50', ring: 'ring-teal-300', text: 'text-teal-700', icon: 'text-teal-600' },
+  { bg: 'bg-cyan-50', ring: 'ring-cyan-300', text: 'text-cyan-700', icon: 'text-cyan-600' }
+];
+
 const OutlinePanel: React.FC<OutlinePanelProps> = ({ 
   textBlocks, 
   onScrollToBlock, 
@@ -28,6 +44,16 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
   selectedParagraphs,
   onToggleParagraphSelection
 }) => {
+  // Función para obtener el color de un párrafo aplicado
+  const getAppliedColor = (paragraph: TextElement) => {
+    if (!paragraph.applied || !paragraph.appliedColor) {
+      return APPLIED_COLORS[0]; // Color por defecto
+    }
+    
+    const colorIndex = parseInt(paragraph.appliedColor);
+    return APPLIED_COLORS[colorIndex] || APPLIED_COLORS[0];
+  };
+
   const getAssociatedParagraphs = (titleIndex: number) => {
     const paragraphs = [];
     for (let i = titleIndex + 1; i < textBlocks.length; i++) {
@@ -73,44 +99,48 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
             </div>
 
             {/* Associated Paragraphs (only show if not collapsed) */}
-            {!isCollapsed && associatedParagraphs.map((paragraph) => (
-              <div
-                key={paragraph.id}
-                className={`ml-6 flex items-center gap-2 p-1 rounded-md hover:bg-blue-50 cursor-pointer transition-colors ${
-                  selectedParagraphs.has(paragraph.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
-                } ${
-                  paragraph.applied ? 'bg-green-50 ring-1 ring-green-300' : ''
-                }`}
-                onClick={() => onScrollToBlock(paragraph.id)}
-              >
-                <Checkbox 
-                  className="flex-shrink-0" 
-                  checked={selectedParagraphs.has(paragraph.id)}
-                  onCheckedChange={(checked) => {
-                    onToggleParagraphSelection(paragraph.id);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <FileText className={`w-3 h-3 flex-shrink-0 ${paragraph.applied ? 'text-green-600' : 'text-blue-600'}`} />
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <div className={`text-xs truncate ${paragraph.applied ? 'text-green-700' : 'text-blue-700'}`}>
-                    Párrafo {paragraph.number} ({paragraph.text.length} caracteres)
-                    {paragraph.applied && <span className="ml-1 text-green-600">✓</span>}
+            {!isCollapsed && associatedParagraphs.map((paragraph) => {
+              const appliedColor = getAppliedColor(paragraph);
+              return (
+                <div
+                  key={paragraph.id}
+                  className={`ml-6 flex items-center gap-2 p-1 rounded-md hover:bg-blue-50 cursor-pointer transition-colors ${
+                    selectedParagraphs.has(paragraph.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
+                  } ${
+                    paragraph.applied ? `${appliedColor.bg} ring-1 ${appliedColor.ring}` : ''
+                  }`}
+                  onClick={() => onScrollToBlock(paragraph.id)}
+                >
+                  <Checkbox 
+                    className="flex-shrink-0" 
+                    checked={selectedParagraphs.has(paragraph.id)}
+                    onCheckedChange={(checked) => {
+                      onToggleParagraphSelection(paragraph.id);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <FileText className={`w-3 h-3 flex-shrink-0 ${paragraph.applied ? appliedColor.icon : 'text-blue-600'}`} />
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <div className={`text-xs truncate ${paragraph.applied ? appliedColor.text : 'text-blue-700'}`}>
+                      Párrafo {paragraph.number} ({paragraph.text.length} caracteres)
+                      {paragraph.applied && <span className="ml-1">✓</span>}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         );
       } else if (currentTitleIndex === -1) {
         // Standalone paragraph (not under any title)
+        const appliedColor = getAppliedColor(block);
         items.push(
           <div
             key={block.id}
             className={`flex items-center gap-2 p-2 rounded-md hover:bg-blue-50 cursor-pointer transition-colors mb-1 ${
               selectedParagraphs.has(block.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
             } ${
-              block.applied ? 'bg-green-50 ring-1 ring-green-300' : ''
+              block.applied ? `${appliedColor.bg} ring-1 ${appliedColor.ring}` : ''
             }`}
             onClick={() => onScrollToBlock(block.id)}
           >
@@ -122,11 +152,11 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
               }}
               onClick={(e) => e.stopPropagation()}
             />
-            <FileText className={`w-4 h-4 flex-shrink-0 ${block.applied ? 'text-green-600' : 'text-blue-600'}`} />
+            <FileText className={`w-4 h-4 flex-shrink-0 ${block.applied ? appliedColor.icon : 'text-blue-600'}`} />
             <div className="flex-1 min-w-0 overflow-hidden">
-              <div className={`text-sm truncate ${block.applied ? 'text-green-700' : 'text-blue-700'}`}>
+              <div className={`text-sm truncate ${block.applied ? appliedColor.text : 'text-blue-700'}`}>
                 Párrafo {block.number}
-                {block.applied && <span className="ml-1 text-green-600">✓</span>}
+                {block.applied && <span className="ml-1">✓</span>}
               </div>
               <div className="text-xs text-blue-500 truncate">
                 {block.text.length} caracteres
