@@ -32,37 +32,37 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ textBlocks }) => {
       label: 'Paragraphs',
       value: totalParagraphs,
       icon: FileText,
-      color: 'text-blue-600',
-      bg: 'bg-blue-100'
+      color: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-100 dark:bg-blue-900/30'
     },
     {
       label: 'Titles',
       value: totalTitles,
       icon: Hash,
-      color: 'text-amber-600',
-      bg: 'bg-amber-100'
+      color: 'text-amber-600 dark:text-amber-400',
+      bg: 'bg-amber-100 dark:bg-amber-900/30'
     },
     {
       label: 'Total Words',
       value: totalWords,
       icon: Type,
-      color: 'text-green-600',
-      bg: 'bg-green-100'
+      color: 'text-green-600 dark:text-green-400',
+      bg: 'bg-green-100 dark:bg-green-900/30'
     },
     {
       label: 'Total Characters',
       value: totalCharacters,
       icon: BarChart3,
-      color: 'text-purple-600',
-      bg: 'bg-purple-100'
+      color: 'text-purple-600 dark:text-purple-400',
+      bg: 'bg-purple-100 dark:bg-purple-900/30'
     }
   ];
 
   return (
-    <Card className="p-6 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+    <Card className="p-6 shadow-lg border bg-card text-card-foreground backdrop-blur-sm">
       <div className="flex items-center gap-2 mb-4">
-        <BarChart3 className="w-5 h-5 text-gray-700" />
-        <h2 className="text-xl font-semibold text-gray-800">Statistics</h2>
+        <BarChart3 className="w-5 h-5 text-foreground" />
+        <h2 className="text-xl font-semibold text-foreground">Statistics</h2>
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -71,14 +71,14 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ textBlocks }) => {
           return (
             <div
               key={stat.label}
-              className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 hover:shadow-md transition-shadow"
+              className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted hover:shadow-md transition-all"
             >
               <div className={`p-2 rounded-full ${stat.bg}`}>
                 <IconComponent className={`w-5 h-5 ${stat.color}`} />
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-800">{stat.value}</div>
-                <div className="text-sm text-gray-600">{stat.label}</div>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                <div className="text-sm text-muted-foreground">{stat.label}</div>
               </div>
             </div>
           );

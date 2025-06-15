@@ -12,7 +12,7 @@ interface TextElement {
   titleNumber?: number;
   visible: boolean;
   applied?: boolean;
-  appliedColor?: string; // Nueva propiedad para el color asignado
+  appliedColor?: string;
 }
 
 interface OutlinePanelProps {
@@ -23,18 +23,18 @@ interface OutlinePanelProps {
   onToggleParagraphSelection: (paragraphId: string) => void;
 }
 
-// Array de colores para las aplicaciones
+// Array de colores para las aplicaciones con soporte para modo oscuro
 const APPLIED_COLORS = [
-  { bg: 'bg-green-50', ring: 'ring-green-300', text: 'text-green-700', icon: 'text-green-600' },
-  { bg: 'bg-blue-50', ring: 'ring-blue-300', text: 'text-blue-700', icon: 'text-blue-600' },
-  { bg: 'bg-purple-50', ring: 'ring-purple-300', text: 'text-purple-700', icon: 'text-purple-600' },
-  { bg: 'bg-orange-50', ring: 'ring-orange-300', text: 'text-orange-700', icon: 'text-orange-600' },
-  { bg: 'bg-pink-50', ring: 'ring-pink-300', text: 'text-pink-700', icon: 'text-pink-600' },
-  { bg: 'bg-indigo-50', ring: 'ring-indigo-300', text: 'text-indigo-700', icon: 'text-indigo-600' },
-  { bg: 'bg-red-50', ring: 'ring-red-300', text: 'text-red-700', icon: 'text-red-600' },
-  { bg: 'bg-yellow-50', ring: 'ring-yellow-300', text: 'text-yellow-700', icon: 'text-yellow-600' },
-  { bg: 'bg-teal-50', ring: 'ring-teal-300', text: 'text-teal-700', icon: 'text-teal-600' },
-  { bg: 'bg-cyan-50', ring: 'ring-cyan-300', text: 'text-cyan-700', icon: 'text-cyan-600' }
+  { bg: 'bg-green-50 dark:bg-green-900/20', ring: 'ring-green-300 dark:ring-green-700', text: 'text-green-700 dark:text-green-300', icon: 'text-green-600 dark:text-green-400' },
+  { bg: 'bg-blue-50 dark:bg-blue-900/20', ring: 'ring-blue-300 dark:ring-blue-700', text: 'text-blue-700 dark:text-blue-300', icon: 'text-blue-600 dark:text-blue-400' },
+  { bg: 'bg-purple-50 dark:bg-purple-900/20', ring: 'ring-purple-300 dark:ring-purple-700', text: 'text-purple-700 dark:text-purple-300', icon: 'text-purple-600 dark:text-purple-400' },
+  { bg: 'bg-orange-50 dark:bg-orange-900/20', ring: 'ring-orange-300 dark:ring-orange-700', text: 'text-orange-700 dark:text-orange-300', icon: 'text-orange-600 dark:text-orange-400' },
+  { bg: 'bg-pink-50 dark:bg-pink-900/20', ring: 'ring-pink-300 dark:ring-pink-700', text: 'text-pink-700 dark:text-pink-300', icon: 'text-pink-600 dark:text-pink-400' },
+  { bg: 'bg-indigo-50 dark:bg-indigo-900/20', ring: 'ring-indigo-300 dark:ring-indigo-700', text: 'text-indigo-700 dark:text-indigo-300', icon: 'text-indigo-600 dark:text-indigo-400' },
+  { bg: 'bg-red-50 dark:bg-red-900/20', ring: 'ring-red-300 dark:ring-red-700', text: 'text-red-700 dark:text-red-300', icon: 'text-red-600 dark:text-red-400' },
+  { bg: 'bg-yellow-50 dark:bg-yellow-900/20', ring: 'ring-yellow-300 dark:ring-yellow-700', text: 'text-yellow-700 dark:text-yellow-300', icon: 'text-yellow-600 dark:text-yellow-400' },
+  { bg: 'bg-teal-50 dark:bg-teal-900/20', ring: 'ring-teal-300 dark:ring-teal-700', text: 'text-teal-700 dark:text-teal-300', icon: 'text-teal-600 dark:text-teal-400' },
+  { bg: 'bg-cyan-50 dark:bg-cyan-900/20', ring: 'ring-cyan-300 dark:ring-cyan-700', text: 'text-cyan-700 dark:text-cyan-300', icon: 'text-cyan-600 dark:text-cyan-400' }
 ];
 
 const OutlinePanel: React.FC<OutlinePanelProps> = ({ 
@@ -47,7 +47,7 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
   // Función para obtener el color de un párrafo aplicado
   const getAppliedColor = (paragraph: TextElement) => {
     if (!paragraph.applied || !paragraph.appliedColor) {
-      return APPLIED_COLORS[0]; // Color por defecto
+      return APPLIED_COLORS[0];
     }
     
     const colorIndex = parseInt(paragraph.appliedColor);
@@ -77,22 +77,22 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
           <div key={block.id} className="mb-2">
             {/* Title Item */}
             <div
-              className="flex items-center gap-2 p-2 rounded-md hover:bg-blue-100 cursor-pointer transition-colors"
+              className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
               onClick={() => onScrollToBlock(block.id)}
             >
               <div className="flex items-center gap-1 flex-shrink-0">
                 {isCollapsed ? (
-                  <ChevronRight className="w-3 h-3 text-amber-600" />
+                  <ChevronRight className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                 ) : (
-                  <ChevronDown className="w-3 h-3 text-amber-600" />
+                  <ChevronDown className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                 )}
-                <Hash className="w-4 h-4 text-amber-600" />
+                <Hash className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <div className="font-semibold text-sm text-amber-800 truncate">
+                <div className="font-semibold text-sm text-amber-800 dark:text-amber-300 truncate">
                   Título {block.titleNumber}
                 </div>
-                <div className="text-xs text-amber-600 truncate">
+                <div className="text-xs text-amber-600 dark:text-amber-400 truncate">
                   {block.text.slice(0, 40)}{block.text.length > 40 ? '...' : ''}
                 </div>
               </div>
@@ -104,8 +104,8 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
               return (
                 <div
                   key={paragraph.id}
-                  className={`ml-6 flex items-center gap-2 p-1 rounded-md hover:bg-blue-50 cursor-pointer transition-colors ${
-                    selectedParagraphs.has(paragraph.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
+                  className={`ml-6 flex items-center gap-2 p-1 rounded-md hover:bg-muted/30 cursor-pointer transition-colors ${
+                    selectedParagraphs.has(paragraph.id) ? 'bg-muted ring-1 ring-border' : ''
                   } ${
                     paragraph.applied ? `${appliedColor.bg} ring-1 ${appliedColor.ring}` : ''
                   }`}
@@ -119,9 +119,9 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
                     }}
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <FileText className={`w-3 h-3 flex-shrink-0 ${paragraph.applied ? appliedColor.icon : 'text-blue-600'}`} />
+                  <FileText className={`w-3 h-3 flex-shrink-0 ${paragraph.applied ? appliedColor.icon : 'text-blue-600 dark:text-blue-400'}`} />
                   <div className="flex-1 min-w-0 overflow-hidden">
-                    <div className={`text-xs truncate ${paragraph.applied ? appliedColor.text : 'text-blue-700'}`}>
+                    <div className={`text-xs truncate ${paragraph.applied ? appliedColor.text : 'text-blue-700 dark:text-blue-300'}`}>
                       Párrafo {paragraph.number} ({paragraph.text.length} caracteres)
                       {paragraph.applied && <span className="ml-1">✓</span>}
                     </div>
@@ -137,8 +137,8 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
         items.push(
           <div
             key={block.id}
-            className={`flex items-center gap-2 p-2 rounded-md hover:bg-blue-50 cursor-pointer transition-colors mb-1 ${
-              selectedParagraphs.has(block.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
+            className={`flex items-center gap-2 p-2 rounded-md hover:bg-muted/30 cursor-pointer transition-colors mb-1 ${
+              selectedParagraphs.has(block.id) ? 'bg-muted ring-1 ring-border' : ''
             } ${
               block.applied ? `${appliedColor.bg} ring-1 ${appliedColor.ring}` : ''
             }`}
@@ -152,13 +152,13 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
               }}
               onClick={(e) => e.stopPropagation()}
             />
-            <FileText className={`w-4 h-4 flex-shrink-0 ${block.applied ? appliedColor.icon : 'text-blue-600'}`} />
+            <FileText className={`w-4 h-4 flex-shrink-0 ${block.applied ? appliedColor.icon : 'text-blue-600 dark:text-blue-400'}`} />
             <div className="flex-1 min-w-0 overflow-hidden">
-              <div className={`text-sm truncate ${block.applied ? appliedColor.text : 'text-blue-700'}`}>
+              <div className={`text-sm truncate ${block.applied ? appliedColor.text : 'text-blue-700 dark:text-blue-300'}`}>
                 Párrafo {block.number}
                 {block.applied && <span className="ml-1">✓</span>}
               </div>
-              <div className="text-xs text-blue-500 truncate">
+              <div className="text-xs text-muted-foreground truncate">
                 {block.text.length} caracteres
               </div>
             </div>
@@ -171,12 +171,12 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
   };
 
   return (
-    <Card className="h-full flex flex-col shadow-lg border-0 bg-white/90 backdrop-blur-sm overflow-hidden">
+    <Card className="h-full flex flex-col shadow-lg bg-card text-card-foreground backdrop-blur-sm overflow-hidden">
       <div className="flex items-center gap-2 p-4 pb-2 flex-shrink-0">
-        <Hash className="w-5 h-5 text-gray-700" />
-        <h2 className="text-lg font-semibold text-gray-800">Vista General</h2>
+        <Hash className="w-5 h-5 text-foreground" />
+        <h2 className="text-lg font-semibold text-foreground">Vista General</h2>
         {selectedParagraphs.size > 0 && (
-          <div className="ml-auto bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+          <div className="ml-auto bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs font-medium">
             {selectedParagraphs.size} seleccionados
           </div>
         )}
@@ -186,7 +186,7 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
         <div className="h-full overflow-y-auto px-4 pb-4">
           <div className="space-y-1">
             {textBlocks.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 <Hash className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">Sin contenido</p>
               </div>

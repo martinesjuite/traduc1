@@ -100,14 +100,16 @@ const TextBlock: React.FC<TextBlockProps> = ({
   const associatedStats = getAssociatedParagraphsStats();
 
   return (
-    <Card className={`transition-all duration-200 hover:shadow-md ${
+    <Card className={`transition-all duration-200 hover:shadow-md bg-card text-card-foreground ${
       block.isTitle 
-        ? 'border-l-4 border-l-amber-400 bg-gradient-to-r from-amber-50 to-orange-50' 
-        : 'border-l-4 border-l-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50'
+        ? 'border-l-4 border-l-amber-400 dark:border-l-amber-500' 
+        : 'border-l-4 border-l-blue-400 dark:border-l-blue-500'
     }`}>
       {/* Header */}
-      <div className={`flex items-center justify-between p-3 rounded-t-lg ${
-        block.isTitle ? 'bg-amber-100 border-b border-amber-200' : 'bg-blue-100 border-b border-blue-200'
+      <div className={`flex items-center justify-between p-3 rounded-t-lg border-b ${
+        block.isTitle 
+          ? 'bg-amber-100 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' 
+          : 'bg-blue-100 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
       }`}>
         <div className="flex items-center gap-2">
           {block.isTitle && (
@@ -115,16 +117,16 @@ const TextBlock: React.FC<TextBlockProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleToggleCollapse}
-              className="p-1 h-auto hover:bg-white/50"
+              className="p-1 h-auto hover:bg-background/50"
             >
               {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </Button>
           )}
           
           <div className="flex items-center gap-2">
-            <Hash className={`w-4 h-4 ${block.isTitle ? 'text-amber-600' : 'text-blue-600'}`} />
+            <Hash className={`w-4 h-4 ${block.isTitle ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'}`} />
             <span className={`font-medium ${
-              block.isTitle ? 'text-amber-800' : 'text-blue-800'
+              block.isTitle ? 'text-amber-800 dark:text-amber-300' : 'text-blue-800 dark:text-blue-300'
             }`}>
               {block.isTitle ? `Title ${block.titleNumber}` : `Paragraph ${block.number}`}
             </span>
@@ -135,7 +137,7 @@ const TextBlock: React.FC<TextBlockProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => onDelete(block.id)}
-          className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-auto"
+          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 h-auto"
         >
           <Trash2 className="w-4 h-4" />
         </Button>
@@ -148,14 +150,20 @@ const TextBlock: React.FC<TextBlockProps> = ({
           value={localText}
           onChange={handleTextChange}
           placeholder={block.isTitle ? "Enter title text..." : "Enter paragraph text..."}
-          className={`min-h-[60px] resize-none border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${
-            block.isTitle ? 'font-semibold text-lg bg-amber-50' : 'bg-blue-50'
+          className={`min-h-[60px] resize-none ${
+            block.isTitle 
+              ? 'font-semibold text-lg bg-amber-50/50 dark:bg-amber-900/10' 
+              : 'bg-blue-50/50 dark:bg-blue-900/10'
           }`}
           style={{ height: 'auto' }}
         />
 
         {/* Statistics */}
-        <div className={`mt-3 text-sm ${block.isTitle ? 'text-amber-700' : 'text-blue-700'}`}>
+        <div className={`mt-3 text-sm ${
+          block.isTitle 
+            ? 'text-amber-700 dark:text-amber-400' 
+            : 'text-blue-700 dark:text-blue-400'
+        }`}>
           <span>Words: {getWordCount()} | Characters: {getCharCount()}</span>
           {associatedStats && (
             <span className="ml-4">
