@@ -72,27 +72,41 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
         currentTitleIndex = index;
         const isCollapsed = collapsedTitles.has(block.id);
         const associatedParagraphs = getAssociatedParagraphs(index);
+        const appliedColor = getAppliedColor(block);
         
         items.push(
           <div key={block.id} className="mb-2">
             {/* Title Item */}
             <div
-              className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+              className={`flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors ${
+                selectedParagraphs.has(block.id) ? 'bg-muted ring-1 ring-border' : ''
+              } ${
+                block.applied ? `${appliedColor.bg} ring-1 ${appliedColor.ring}` : ''
+              }`}
               onClick={() => onScrollToBlock(block.id)}
             >
+              <Checkbox 
+                className="flex-shrink-0" 
+                checked={selectedParagraphs.has(block.id)}
+                onCheckedChange={(checked) => {
+                  onToggleParagraphSelection(block.id);
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
               <div className="flex items-center gap-1 flex-shrink-0">
                 {isCollapsed ? (
                   <ChevronRight className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                 ) : (
                   <ChevronDown className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                 )}
-                <Hash className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <Hash className={`w-4 h-4 ${block.applied ? appliedColor.icon : 'text-amber-600 dark:text-amber-400'}`} />
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <div className="font-semibold text-sm text-amber-800 dark:text-amber-300 truncate">
+                <div className={`font-semibold text-sm truncate ${block.applied ? appliedColor.text : 'text-amber-800 dark:text-amber-300'}`}>
                   Título {block.titleNumber}
+                  {block.applied && <span className="ml-1">✓</span>}
                 </div>
-                <div className="text-xs text-amber-600 dark:text-amber-400 truncate">
+                <div className={`text-xs truncate ${block.applied ? appliedColor.text : 'text-amber-600 dark:text-amber-400'}`}>
                   {block.text.slice(0, 40)}{block.text.length > 40 ? '...' : ''}
                 </div>
               </div>
