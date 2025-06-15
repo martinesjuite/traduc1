@@ -54,6 +54,16 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
     return APPLIED_COLORS[colorIndex] || APPLIED_COLORS[0];
   };
 
+  // Función para determinar si un párrafo está antes del primer título
+  const isParagraphBeforeFirstTitle = (paragraphIndex: number) => {
+    // Buscar el primer título en textBlocks
+    const firstTitleIndex = textBlocks.findIndex(block => block.isTitle);
+    // Si no hay títulos, ningún párrafo está "antes del primer título"
+    if (firstTitleIndex === -1) return false;
+    // Si el párrafo está antes del primer título, devolver true
+    return paragraphIndex < firstTitleIndex;
+  };
+
   const getAssociatedParagraphs = (titleIndex: number) => {
     const paragraphs = [];
     for (let i = titleIndex + 1; i < textBlocks.length; i++) {
@@ -148,6 +158,8 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
       } else if (currentTitleIndex === -1) {
         // Standalone paragraph (not under any title)
         const appliedColor = getAppliedColor(block);
+        const isBeforeFirstTitle = isParagraphBeforeFirstTitle(index);
+        
         items.push(
           <div
             key={block.id}
@@ -155,6 +167,8 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
               selectedParagraphs.has(block.id) ? 'bg-muted ring-1 ring-border' : ''
             } ${
               block.applied ? `${appliedColor.bg} ring-1 ${appliedColor.ring}` : ''
+            } ${
+              isBeforeFirstTitle ? 'bg-gray-100 dark:bg-gray-800' : ''
             }`}
             onClick={() => onScrollToBlock(block.id)}
           >
@@ -166,13 +180,21 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
               }}
               onClick={(e) => e.stopPropagation()}
             />
-            <FileText className={`w-4 h-4 flex-shrink-0 ${block.applied ? appliedColor.icon : 'text-blue-600 dark:text-blue-400'}`} />
+            <FileText className={`w-4 h-4 flex-shrink-0 ${
+              block.applied ? appliedColor.icon : 
+              isBeforeFirstTitle ? 'text-gray-500 dark:text-gray-400' : 'text-blue-600 dark:text-blue-400'
+            }`} />
             <div className="flex-1 min-w-0 overflow-hidden">
-              <div className={`text-sm truncate ${block.applied ? appliedColor.text : 'text-blue-700 dark:text-blue-300'}`}>
+              <div className={`text-sm truncate ${
+                block.applied ? appliedColor.text : 
+                isBeforeFirstTitle ? 'text-gray-600 dark:text-gray-400' : 'text-blue-700 dark:text-blue-300'
+              }`}>
                 Párrafo {block.number}
                 {block.applied && <span className="ml-1">✓</span>}
               </div>
-              <div className="text-xs text-muted-foreground truncate">
+              <div className={`text-xs truncate ${
+                isBeforeFirstTitle ? 'text-gray-500 dark:text-gray-500' : 'text-muted-foreground'
+              }`}>
                 {block.text.length} caracteres
               </div>
             </div>
