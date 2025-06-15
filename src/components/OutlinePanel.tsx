@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Hash, FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -251,9 +252,27 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
   };
 
   return (
-    <Card className="h-full flex flex-col shadow-lg bg-card text-card-foreground backdrop-blur-sm overflow-hidden">
-      <div className="flex flex-col gap-3 p-4 pb-2 flex-shrink-0">
-        <div className="flex items-center gap-2">
+    <div className="h-full flex flex-col gap-3">
+      {/* Language Selector - Outside of the card */}
+      <div className="space-y-2 px-1">
+        <label className="text-sm font-medium text-foreground">Idioma:</label>
+        <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+          <SelectTrigger className="w-full min-w-[400px]">
+            <SelectValue placeholder="Selecciona un idioma" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] min-w-[400px]">
+            {LANGUAGE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value} className="min-w-[380px]">
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Vista General Card */}
+      <Card className="flex-1 flex flex-col shadow-lg bg-card text-card-foreground backdrop-blur-sm overflow-hidden">
+        <div className="flex items-center gap-2 p-4 pb-2 flex-shrink-0">
           <Hash className="w-5 h-5 text-foreground" />
           <h2 className="text-lg font-semibold text-foreground">Vista General</h2>
           {selectedParagraphs.size > 0 && (
@@ -263,39 +282,22 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
           )}
         </div>
         
-        {/* Language Selector */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Idioma:</label>
-          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecciona un idioma" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px]">
-              {LANGUAGE_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto px-4 pb-4">
-          <div className="space-y-1">
-            {textBlocks.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Hash className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Sin contenido</p>
-              </div>
-            ) : (
-              renderOutlineItems()
-            )}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto px-4 pb-4">
+            <div className="space-y-1">
+              {textBlocks.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Hash className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Sin contenido</p>
+                </div>
+              ) : (
+                renderOutlineItems()
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 };
 
