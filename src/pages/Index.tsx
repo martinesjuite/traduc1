@@ -15,6 +15,7 @@ interface TextElement {
   number?: number;
   titleNumber?: number;
   visible: boolean;
+  applied?: boolean; // Nueva propiedad para marcar párrafos aplicados
 }
 
 const Index = () => {
@@ -63,10 +64,20 @@ const Index = () => {
     if (selectedTexts) {
       // Copy selected text to clipboard
       navigator.clipboard.writeText(selectedTexts).then(() => {
+        // Mark selected paragraphs as applied
+        setTextBlocks(blocks => blocks.map(block => 
+          selectedParagraphs.has(block.id) 
+            ? { ...block, applied: true }
+            : block
+        ));
+        
         toast({
           title: "Aplicado",
-          description: `Texto de ${selectedParagraphs.size} párrafos copiado al portapapeles`
+          description: `Texto de ${selectedParagraphs.size} párrafos copiado al portapapeles y marcados como aplicados`
         });
+        
+        // Clear selection after applying
+        clearSelection();
       }).catch(() => {
         toast({
           title: "Error",
@@ -226,7 +237,8 @@ const Index = () => {
       id: `block-${Date.now()}`,
       text: '',
       isTitle: false,
-      visible: true
+      visible: true,
+      applied: false
     };
     
     const updatedBlocks = updateNumbering([...textBlocks, newBlock]);
@@ -236,7 +248,7 @@ const Index = () => {
   // Update block text
   const updateBlockText = (id: string, newText: string) => {
     setTextBlocks(blocks => blocks.map(block => 
-      block.id === id ? { ...block, text: newText } : block
+      block.id === id ? { ...block, text: newText, applied: false } : block // Reset applied when text changes
     ));
   };
 
@@ -533,7 +545,9 @@ const Index = () => {
                       <div
                         key={block.id}
                         ref={(el) => setBlockRef(block.id, el)}
-                        className={selectedParagraphs.has(block.id) ? 'ring-2 ring-blue-400 rounded-lg' : ''}
+                        className={`${selectedParagraphs.has(block.id) ? 'ring-2 ring-blue-400 rounded-lg' : ''} ${
+                          block.applied ? 'ring-2 ring-green-400 bg-green-50/50 rounded-lg' : ''
+                        }`}
                       >
                         <TextBlock
                           block={block}
