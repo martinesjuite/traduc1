@@ -21,9 +21,10 @@ interface TextElement {
 
 interface ApiPanelProps {
   textBlocks: TextElement[];
+  selectedLanguage?: string;
 }
 
-const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
+const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks, selectedLanguage = 'spanish' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [apiUrl, setApiUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
@@ -57,6 +58,62 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
       return block.text;
     })
     .join('\n\n');
+
+  // Function to generate filename based on language and content
+  const generateFilename = () => {
+    // Language mapping to remove accents and ñ
+    const languageMap: { [key: string]: string } = {
+      'spanish': 'espanol',
+      'english': 'english',
+      'french': 'frances', 
+      'german': 'aleman',
+      'italian': 'italiano',
+      'polish': 'polaco',
+      'portuguese': 'portugues',
+      'arabic': 'arabe',
+      'hindi': 'hindi',
+      'japanese': 'japones',
+      'korean': 'coreano',
+      'chinese': 'chino',
+      'turkish': 'turco',
+      'romanian': 'rumano',
+      'dutch': 'holandes',
+      'greek': 'griego',
+      'vietnamese': 'vietnamita',
+      'bulgarian': 'bulgaro',
+      'finnish': 'finlandes',
+      'croatian': 'croata',
+      'swedish': 'sueco',
+      'norwegian': 'noruego',
+      'danish': 'danes'
+    };
+
+    const languageName = languageMap[selectedLanguage] || 'audio';
+    
+    // Check if applied blocks are before first title (intro paragraphs)
+    const firstTitleIndex = textBlocks.findIndex(block => block.isTitle);
+    const hasIntroContent = appliedBlocks.some(block => {
+      const blockIndex = textBlocks.findIndex(tb => tb.id === block.id);
+      return !block.isTitle && (firstTitleIndex === -1 || blockIndex < firstTitleIndex);
+    });
+    
+    // Check if we have only titles
+    const hasOnlyTitles = appliedBlocks.every(block => block.isTitle);
+    
+    // Check if we have mixed content
+    const hasTitles = appliedBlocks.some(block => block.isTitle);
+    const hasParagraphs = appliedBlocks.some(block => !block.isTitle);
+    
+    if (hasIntroContent && !hasTitles) {
+      return `${languageName}_intro.mp3`;
+    } else if (hasOnlyTitles) {
+      return `${languageName}_titulos.mp3`;
+    } else if (hasTitles && hasParagraphs) {
+      return `${languageName}_contenido.mp3`;
+    } else {
+      return `${languageName}_parrafos.mp3`;
+    }
+  };
 
   const handleSendRequest = async () => {
     if (!apiUrl) {
@@ -255,13 +312,14 @@ Soluciones sugeridas:
 
   const downloadAudio = () => {
     if (audioUrl) {
+      const filename = generateFilename();
       const a = document.createElement('a');
       a.href = audioUrl;
-      a.download = 'audio-response.mp3';
+      a.download = filename;
       a.click();
       toast({
         title: "Descarga iniciada",
-        description: "El archivo de audio se está descargando"
+        description: `Descargando: ${filename}`
       });
     }
   };
