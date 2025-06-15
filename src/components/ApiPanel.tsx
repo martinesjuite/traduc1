@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Send, Settings, ChevronDown, ChevronRight, Copy, Check, AlertCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Send, Settings, ChevronDown, ChevronRight, Copy, Check, AlertCircle, Play, Pause, Download, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,8 +30,11 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
   const [customHeaders, setCustomHeaders] = useState('{"Content-Type": "application/json"}');
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState('');
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [requestMethod, setRequestMethod] = useState('POST');
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Get applied paragraphs
   const appliedParagraphs = textBlocks.filter(block => block.applied && !block.isTitle);
@@ -59,6 +61,8 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
 
     setIsLoading(true);
     setResponse('');
+    setAudioUrl(null);
+    setIsPlaying(false);
 
     try {
       // Parse custom headers
@@ -103,27 +107,50 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
         headers,
         body: requestMethod !== 'GET' ? JSON.stringify(requestBody) : undefined,
         signal: controller.signal,
-        mode: 'cors', // Explicitly set CORS mode
+        mode: 'cors',
       });
 
       clearTimeout(timeoutId);
 
-      const responseText = await response.text();
-      let formattedResponse = '';
+      // Check if response is audio
+      const contentType = response.headers.get('content-type');
+      const isAudio = contentType && (contentType.includes('audio/') || contentType.includes('audio/mpeg'));
 
-      try {
-        const jsonResponse = JSON.parse(responseText);
-        formattedResponse = JSON.stringify(jsonResponse, null, 2);
-      } catch (e) {
-        formattedResponse = responseText;
+      if (isAudio) {
+        // Handle audio response
+        const audioBlob = await response.blob();
+        const audioObjectUrl = URL.createObjectURL(audioBlob);
+        setAudioUrl(audioObjectUrl);
+        
+        const responseDetails = `Status: ${response.status} ${response.statusText}\n` +
+          `Content-Type: ${contentType}\n` +
+          `Audio file received successfully!\n` +
+          `File size: ${(audioBlob.size / 1024).toFixed(2)} KB`;
+        
+        setResponse(responseDetails);
+        
+        toast({
+          title: "Audio recibido",
+          description: "La API devolvió un archivo de audio MP3"
+        });
+      } else {
+        // Handle text response
+        const responseText = await response.text();
+        let formattedResponse = '';
+
+        try {
+          const jsonResponse = JSON.parse(responseText);
+          formattedResponse = JSON.stringify(jsonResponse, null, 2);
+        } catch (e) {
+          formattedResponse = responseText;
+        }
+
+        const responseDetails = `Status: ${response.status} ${response.statusText}\n` +
+          `Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}\n\n` +
+          `Body:\n${formattedResponse}`;
+
+        setResponse(responseDetails);
       }
-
-      // Add response details
-      const responseDetails = `Status: ${response.status} ${response.statusText}\n` +
-        `Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}\n\n` +
-        `Body:\n${formattedResponse}`;
-
-      setResponse(responseDetails);
 
       if (response.ok) {
         toast({
@@ -175,6 +202,35 @@ Soluciones sugeridas:
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const toggleAudioPlayback = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play();
+        setIsPlaying(true);
+      }
+    }
+  };
+
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+  };
+
+  const downloadAudio = () => {
+    if (audioUrl) {
+      const a = document.createElement('a');
+      a.href = audioUrl;
+      a.download = 'audio-response.mp3';
+      a.click();
+      toast({
+        title: "Descarga iniciada",
+        description: "El archivo de audio se está descargando"
+      });
     }
   };
 
@@ -322,6 +378,47 @@ Soluciones sugeridas:
               )}
             </Button>
 
+            {/* Audio Player */}
+            {audioUrl && (
+              <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <Label className="text-sm font-medium text-blue-800 dark:text-blue-200">Audio Response</Label>
+                  </div>
+                  <Button
+                    onClick={downloadAudio}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Descargar
+                  </Button>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={toggleAudioPlayback}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    {isPlaying ? 'Pausar' : 'Reproducir'}
+                  </Button>
+                  
+                  <audio
+                    ref={audioRef}
+                    src={audioUrl}
+                    onEnded={handleAudioEnded}
+                    controls
+                    className="flex-1 h-8"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Response */}
             {response && (
               <div className="space-y-2">
@@ -351,6 +448,7 @@ Soluciones sugeridas:
               <p>1. Selecciona párrafos y presiona "Aplicar" para marcarlos</p>
               <p>2. Configura la URL de tu API y headers si es necesario</p>
               <p>3. Los párrafos aplicados se enviarán automáticamente en formato JSON</p>
+              <p>4. Si la API devuelve un archivo MP3, aparecerá un reproductor de audio</p>
               <p className="mt-2 text-amber-600 dark:text-amber-400"><strong>💡 Tip:</strong> Si hay errores CORS, contacta al administrador de la API</p>
             </div>
           </div>
