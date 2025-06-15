@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Plus, Download, Upload, Eye, EyeOff, Trash2, Copy, X } from 'lucide-react';
+import { FileText, Plus, Download, Upload, Eye, EyeOff, Trash2, Copy, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -51,6 +51,30 @@ const Index = () => {
   const clearSelection = () => {
     setSelectedParagraphs(new Set());
     setShowSelectionPopup(false);
+  };
+
+  // Apply action to selected paragraphs
+  const applyToSelectedParagraphs = () => {
+    const selectedTexts = textBlocks
+      .filter(block => selectedParagraphs.has(block.id))
+      .map(block => block.text)
+      .join('\n\n');
+    
+    if (selectedTexts) {
+      // Copy selected text to clipboard
+      navigator.clipboard.writeText(selectedTexts).then(() => {
+        toast({
+          title: "Aplicado",
+          description: `Texto de ${selectedParagraphs.size} párrafos copiado al portapapeles`
+        });
+      }).catch(() => {
+        toast({
+          title: "Error",
+          description: "No se pudo copiar al portapapeles",
+          variant: "destructive"
+        });
+      });
+    }
   };
 
   // Scroll to specific block
@@ -395,6 +419,16 @@ const Index = () => {
             </div>
           </div>
           <div className="mt-3 pt-2 border-t">
+            <Button
+              onClick={applyToSelectedParagraphs}
+              className="w-full bg-green-600 hover:bg-green-700 gap-2"
+              size="sm"
+            >
+              <Check className="w-4 h-4" />
+              Aplicar
+            </Button>
+          </div>
+          <div className="mt-2">
             <div className="text-xs text-gray-500">
               Selecciona párrafos desde el panel lateral para ver el conteo total
             </div>
