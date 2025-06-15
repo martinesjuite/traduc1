@@ -10,6 +10,7 @@ interface TextElement {
   number?: number;
   titleNumber?: number;
   visible: boolean;
+  applied?: boolean;
 }
 
 interface OutlinePanelProps {
@@ -77,6 +78,8 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
                 key={paragraph.id}
                 className={`ml-6 flex items-center gap-2 p-1 rounded-md hover:bg-blue-50 cursor-pointer transition-colors ${
                   selectedParagraphs.has(paragraph.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
+                } ${
+                  paragraph.applied ? 'bg-green-50 ring-1 ring-green-300' : ''
                 }`}
                 onClick={() => onScrollToBlock(paragraph.id)}
               >
@@ -88,10 +91,11 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
                   }}
                   onClick={(e) => e.stopPropagation()}
                 />
-                <FileText className="w-3 h-3 text-blue-600 flex-shrink-0" />
+                <FileText className={`w-3 h-3 flex-shrink-0 ${paragraph.applied ? 'text-green-600' : 'text-blue-600'}`} />
                 <div className="flex-1 min-w-0 overflow-hidden">
-                  <div className="text-xs text-blue-700 truncate">
+                  <div className={`text-xs truncate ${paragraph.applied ? 'text-green-700' : 'text-blue-700'}`}>
                     Párrafo {paragraph.number} ({paragraph.text.length} caracteres)
+                    {paragraph.applied && <span className="ml-1 text-green-600">✓</span>}
                   </div>
                 </div>
               </div>
@@ -105,6 +109,8 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
             key={block.id}
             className={`flex items-center gap-2 p-2 rounded-md hover:bg-blue-50 cursor-pointer transition-colors mb-1 ${
               selectedParagraphs.has(block.id) ? 'bg-blue-100 ring-1 ring-blue-300' : ''
+            } ${
+              block.applied ? 'bg-green-50 ring-1 ring-green-300' : ''
             }`}
             onClick={() => onScrollToBlock(block.id)}
           >
@@ -116,10 +122,11 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
               }}
               onClick={(e) => e.stopPropagation()}
             />
-            <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <FileText className={`w-4 h-4 flex-shrink-0 ${block.applied ? 'text-green-600' : 'text-blue-600'}`} />
             <div className="flex-1 min-w-0 overflow-hidden">
-              <div className="text-sm text-blue-700 truncate">
+              <div className={`text-sm truncate ${block.applied ? 'text-green-700' : 'text-blue-700'}`}>
                 Párrafo {block.number}
+                {block.applied && <span className="ml-1 text-green-600">✓</span>}
               </div>
               <div className="text-xs text-blue-500 truncate">
                 {block.text.length} caracteres
