@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import TextBlock from '@/components/TextBlock';
 import StatsPanel from '@/components/StatsPanel';
+import OutlinePanel from '@/components/OutlinePanel';
 
 interface TextElement {
   id: string;
@@ -20,9 +21,32 @@ interface TextElement {
 const Index = () => {
   const [originalText, setOriginalText] = useState('');
   const [textBlocks, setTextBlocks] = useState<TextElement[]>([]);
+  const [collapsedTitles, setCollapsedTitles] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const blockRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Analyze text to identify titles and paragraphs
+  // Scroll to specific block
+  const scrollToBlock = (blockId: string) => {
+    const blockElement = blockRefs.current[blockId];
+    if (blockElement) {
+      blockElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+      // Add a brief highlight effect
+      blockElement.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.5)';
+      setTimeout(() => {
+        blockElement.style.boxShadow = '';
+      }, 1500);
+    }
+  };
+
+  // Set block ref
+  const setBlockRef = (blockId: string, element: HTMLDivElement | null) => {
+    blockRefs.current[blockId] = element;
+  };
+
+  // Analyze text to identify titles and paragraphs with improved logic
   const analyzeTextWithTitles = (text: string): TextElement[] => {
     const lines = text.split('\n');
     const elements: Omit<TextElement, 'id' | 'visible'>[] = [];
@@ -58,10 +82,12 @@ const Index = () => {
     }));
   };
 
-  // Determine if a line is a title
+  // Enhanced title detection logic
   const isTitle = (line: string, index: number, allLines: string[]): boolean => {
+    // 1. Must start with a number
     if (!line.match(/^\d+/)) return false;
 
+    // 2. Check empty lines before
     let emptyLinesBefore = 0;
     for (let j = index - 1; j >= 0; j--) {
       if (allLines[j].trim() === "") {
@@ -71,6 +97,7 @@ const Index = () => {
       }
     }
 
+    // 3. Check empty lines after
     let emptyLinesAfter = 0;
     for (let j = index + 1; j < allLines.length; j++) {
       if (allLines[j].trim() === "") {
@@ -80,12 +107,26 @@ const Index = () => {
       }
     }
 
-    const isStart = index === 0 || emptyLinesBefore >= 1;
-    const isEnd = index === allLines.length - 1 || emptyLinesAfter >= 1;
+    // Enhanced conditions for title detection
+    const isStart = index === 0;
+    const isEnd = index === allLines.length - 1;
     
-    return (isStart && emptyLinesAfter >= 1) || 
-           (isEnd && emptyLinesBefore >= 1) || 
-           (emptyLinesBefore >= 1 && emptyLinesAfter >= 1);
+    // Title if it's well separated (at least 1 empty line before AND after)
+    if (emptyLinesBefore >= 1 && emptyLinesAfter >= 1) {
+      return true;
+    }
+    
+    // Title if it's at the beginning with empty lines after
+    if (isStart && emptyLinesAfter >= 1) {
+      return true;
+    }
+    
+    // Title if it's at the end with empty lines before
+    if (isEnd && emptyLinesBefore >= 1) {
+      return true;
+    }
+    
+    return false;
   };
 
   // Update numbering for all blocks
@@ -114,6 +155,7 @@ const Index = () => {
     const elements = analyzeTextWithTitles(originalText);
     const numberedElements = updateNumbering(elements);
     setTextBlocks(numberedElements);
+    setCollapsedTitles(new Set()); // Reset collapsed state
     
     const titles = numberedElements.filter(el => el.isTitle).length;
     const paragraphs = numberedElements.length - titles;
@@ -148,6 +190,14 @@ const Index = () => {
   const deleteBlock = (id: string) => {
     const updatedBlocks = textBlocks.filter(block => block.id !== id);
     setTextBlocks(updateNumbering(updatedBlocks));
+    
+    // Remove from collapsed titles if it was a title
+    if (collapsedTitles.has(id)) {
+      const newCollapsed = new Set(collapsedTitles);
+      newCollapsed.delete(id);
+      setCollapsedTitles(newCollapsed);
+    }
+    
     toast({
       title: "Deleted",
       description: "Block deleted successfully"
@@ -156,6 +206,14 @@ const Index = () => {
 
   // Toggle title collapse
   const toggleTitleCollapse = (titleId: string, collapsed: boolean) => {
+    const newCollapsed = new Set(collapsedTitles);
+    if (collapsed) {
+      newCollapsed.add(titleId);
+    } else {
+      newCollapsed.delete(titleId);
+    }
+    setCollapsedTitles(newCollapsed);
+
     const titleIndex = textBlocks.findIndex(block => block.id === titleId);
     if (titleIndex === -1) return;
 
@@ -172,12 +230,15 @@ const Index = () => {
 
   // Expand all titles
   const expandAll = () => {
+    setCollapsedTitles(new Set());
     setTextBlocks(blocks => blocks.map(block => ({ ...block, visible: true })));
     toast({ title: "Expanded", description: "All sections expanded" });
   };
 
   // Collapse all titles
   const collapseAll = () => {
+    const titleIds = textBlocks.filter(block => block.isTitle).map(block => block.id);
+    setCollapsedTitles(new Set(titleIds));
     setTextBlocks(blocks => blocks.map(block => ({
       ...block,
       visible: block.isTitle ? true : false
@@ -209,6 +270,7 @@ const Index = () => {
   const clearAll = () => {
     setOriginalText('');
     setTextBlocks([]);
+    setCollapsedTitles(new Set());
     toast({ title: "Cleared", description: "All content cleared" });
   };
 
@@ -257,6 +319,7 @@ const Index = () => {
       const elements = analyzeTextWithTitles(content);
       const numberedElements = updateNumbering(elements);
       setTextBlocks(numberedElements);
+      setCollapsedTitles(new Set());
       
       toast({ title: "Opened", description: "File opened and parsed successfully" });
     };
@@ -265,9 +328,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container mx-auto p-6 space-y-6">
+      {/* Main container with two-panel layout */}
+      <div className="container mx-auto p-6 h-screen flex flex-col">
         {/* Header */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 mb-6">
           <h1 className="text-4xl font-bold text-gray-800 flex items-center justify-center gap-3">
             <FileText className="text-blue-600" />
             Text Block Editor
@@ -276,7 +340,7 @@ const Index = () => {
         </div>
 
         {/* File Operations */}
-        <div className="flex flex-wrap gap-3 justify-center">
+        <div className="flex flex-wrap gap-3 justify-center mb-6">
           <Button onClick={openFile} variant="outline" className="gap-2">
             <Upload className="w-4 h-4" />
             Open File
@@ -307,62 +371,81 @@ const Index = () => {
           className="hidden"
         />
 
-        {/* Original Text Section */}
-        <Card className="p-6 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Original Text</h2>
-          <Textarea
-            value={originalText}
-            onChange={(e) => setOriginalText(e.target.value)}
-            placeholder="Paste or type your text here..."
-            className="min-h-[200px] text-base resize-none border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-          />
-          <div className="flex gap-3 mt-4">
-            <Button onClick={createParagraphs} className="bg-green-600 hover:bg-green-700 gap-2">
-              <FileText className="w-4 h-4" />
-              Create Paragraphs
-            </Button>
-            <Button onClick={pasteText} variant="outline" className="gap-2">
-              <Copy className="w-4 h-4" />
-              Paste
-            </Button>
-            <Button onClick={clearOriginalText} variant="outline">
-              Clear
-            </Button>
-            <Button onClick={addEmptyParagraph} variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Empty Paragraph
-            </Button>
-          </div>
-        </Card>
-
-        {/* Text Blocks Section */}
-        <Card className="p-6 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Editable Blocks</h2>
-          <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-            {textBlocks.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No text blocks yet. Create paragraphs from the text above.</p>
+        {/* Two-panel layout */}
+        <div className="flex gap-6 flex-1 min-h-0">
+          {/* Left Panel - Main Content */}
+          <div className="flex-1 flex flex-col space-y-6 min-w-0">
+            {/* Original Text Section */}
+            <Card className="p-6 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">Original Text</h2>
+              <Textarea
+                value={originalText}
+                onChange={(e) => setOriginalText(e.target.value)}
+                placeholder="Paste or type your text here..."
+                className="min-h-[150px] text-base resize-none border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              />
+              <div className="flex gap-3 mt-4">
+                <Button onClick={createParagraphs} className="bg-green-600 hover:bg-green-700 gap-2">
+                  <FileText className="w-4 h-4" />
+                  Create Paragraphs
+                </Button>
+                <Button onClick={pasteText} variant="outline" className="gap-2">
+                  <Copy className="w-4 h-4" />
+                  Paste
+                </Button>
+                <Button onClick={clearOriginalText} variant="outline">
+                  Clear
+                </Button>
+                <Button onClick={addEmptyParagraph} variant="outline" className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Empty Paragraph
+                </Button>
               </div>
-            ) : (
-              textBlocks
-                .filter(block => block.visible)
-                .map((block) => (
-                  <TextBlock
-                    key={block.id}
-                    block={block}
-                    onUpdateText={updateBlockText}
-                    onDelete={deleteBlock}
-                    onToggleCollapse={toggleTitleCollapse}
-                    textBlocks={textBlocks}
-                  />
-                ))
-            )}
-          </div>
-        </Card>
+            </Card>
 
-        {/* Statistics Panel */}
-        <StatsPanel textBlocks={textBlocks} />
+            {/* Text Blocks Section */}
+            <Card className="flex-1 p-6 shadow-lg border-0 bg-white/80 backdrop-blur-sm min-h-0">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">Editable Blocks</h2>
+              <div className="space-y-4 h-full overflow-y-auto pr-2">
+                {textBlocks.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>No text blocks yet. Create paragraphs from the text above.</p>
+                  </div>
+                ) : (
+                  textBlocks
+                    .filter(block => block.visible)
+                    .map((block) => (
+                      <div
+                        key={block.id}
+                        ref={(el) => setBlockRef(block.id, el)}
+                      >
+                        <TextBlock
+                          block={block}
+                          onUpdateText={updateBlockText}
+                          onDelete={deleteBlock}
+                          onToggleCollapse={toggleTitleCollapse}
+                          textBlocks={textBlocks}
+                        />
+                      </div>
+                    ))
+                )}
+              </div>
+            </Card>
+
+            {/* Statistics Panel */}
+            <StatsPanel textBlocks={textBlocks} />
+          </div>
+
+          {/* Right Panel - Outline */}
+          <div className="w-80 flex-shrink-0">
+            <OutlinePanel 
+              textBlocks={textBlocks}
+              onScrollToBlock={scrollToBlock}
+              collapsedTitles={collapsedTitles}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
