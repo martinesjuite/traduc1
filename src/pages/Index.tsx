@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import TextBlock from "@/components/TextBlock";
 import OutlinePanel from "@/components/OutlinePanel";
 import StatsPanel from "@/components/StatsPanel";
 import ApiPanel from "@/components/ApiPanel";
 import ThemeToggle from "@/components/ThemeToggle";
+import { sampleTextData } from "@/data/sampleText";
 
 interface TextElement {
   id: string;
@@ -24,22 +24,10 @@ const Index = () => {
   const [selectedParagraphs, setSelectedParagraphs] = useState<Set<string>>(new Set());
   const blockRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['textData'],
-    queryFn: async () => {
-      const response = await fetch('/api/text');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    },
-  });
-
+  // Load sample data instead of making API call
   useEffect(() => {
-    if (data) {
-      setTextBlocks(data);
-    }
-  }, [data]);
+    setTextBlocks(sampleTextData);
+  }, []);
 
   const scrollToBlock = (blockId: string) => {
     const element = blockRefs.current.get(blockId);

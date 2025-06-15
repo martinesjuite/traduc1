@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronRight, Trash2, Hash } from 'lucide-react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
+import { ChevronDown, ChevronRight, Trash2, Hash, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -12,30 +11,51 @@ interface TextElement {
   number?: number;
   titleNumber?: number;
   visible: boolean;
+  applied?: boolean;
+  appliedColor?: string;
 }
 
 interface TextBlockProps {
-  block: TextElement;
-  onUpdateText: (id: string, text: string) => void;
-  onDelete: (id: string) => void;
-  onToggleCollapse: (titleId: string, collapsed: boolean) => void;
-  textBlocks: TextElement[];
+  id: string;
+  text: string;
+  isTitle: boolean;
+  number?: number;
+  titleNumber?: number;
+  visible: boolean;
+  applied?: boolean;
+  appliedColor?: string;
+  onApply: (id: string, colorIndex: number) => void;
+  onRemove: (id: string) => void;
 }
 
-const TextBlock: React.FC<TextBlockProps> = ({
-  block,
-  onUpdateText,
-  onDelete,
-  onToggleCollapse,
-  textBlocks
-}) => {
+// Array de colores para las aplicaciones con soporte para modo oscuro
+const APPLIED_COLORS = [
+  { bg: 'bg-green-50 dark:bg-green-900/20', ring: 'ring-green-300 dark:ring-green-700', text: 'text-green-700 dark:text-green-300', icon: 'text-green-600 dark:text-green-400' },
+  { bg: 'bg-blue-50 dark:bg-blue-900/20', ring: 'ring-blue-300 dark:ring-blue-700', text: 'text-blue-700 dark:text-blue-300', icon: 'text-blue-600 dark:text-blue-400' },
+  { bg: 'bg-purple-50 dark:bg-purple-900/20', ring: 'ring-purple-300 dark:ring-purple-700', text: 'text-purple-700 dark:text-purple-300', icon: 'text-purple-600 dark:text-purple-400' },
+  { bg: 'bg-orange-50 dark:bg-orange-900/20', ring: 'ring-orange-300 dark:ring-orange-700', text: 'text-orange-700 dark:text-orange-300', icon: 'text-orange-600 dark:text-orange-400' },
+  { bg: 'bg-pink-50 dark:bg-pink-900/20', ring: 'ring-pink-300 dark:ring-pink-700', text: 'text-pink-700 dark:text-pink-300', icon: 'text-pink-600 dark:text-pink-400' },
+];
+
+const TextBlock = forwardRef<HTMLDivElement, TextBlockProps>(({
+  id,
+  text,
+  isTitle,
+  number,
+  titleNumber,
+  visible,
+  applied,
+  appliedColor,
+  onApply,
+  onRemove
+}, ref) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [localText, setLocalText] = useState(block.text);
+  const [localText, setLocalText] = useState(text);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setLocalText(block.text);
-  }, [block.text]);
+    setLocalText(text);
+  }, [text]);
 
   useEffect(() => {
     adjustTextareaHeight();
@@ -53,40 +73,21 @@ const TextBlock: React.FC<TextBlockProps> = ({
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
     setLocalText(newText);
-    onUpdateText(block.id, newText);
   };
 
   const handleToggleCollapse = () => {
-    if (block.isTitle) {
-      const newCollapsed = !isCollapsed;
-      setIsCollapsed(newCollapsed);
-      onToggleCollapse(block.id, newCollapsed);
+    if (isTitle) {
+      setIsCollapsed(!isCollapsed);
     }
   };
 
-  const getAssociatedParagraphsStats = () => {
-    if (!block.isTitle) return null;
+  const handleApply = () => {
+    const colorIndex = Math.floor(Math.random() * APPLIED_COLORS.length);
+    onApply(id, colorIndex);
+  };
 
-    const blockIndex = textBlocks.findIndex(b => b.id === block.id);
-    if (blockIndex === -1) return null;
-
-    const associatedParagraphs = [];
-    for (let i = blockIndex + 1; i < textBlocks.length; i++) {
-      if (textBlocks[i].isTitle) break;
-      associatedParagraphs.push(textBlocks[i]);
-    }
-
-    const totalWords = associatedParagraphs.reduce((sum, p) => {
-      return sum + (p.text.trim() ? p.text.trim().split(/\s+/).length : 0);
-    }, 0);
-
-    const totalChars = associatedParagraphs.reduce((sum, p) => sum + p.text.length, 0);
-
-    return {
-      count: associatedParagraphs.length,
-      words: totalWords,
-      chars: totalChars
-    };
+  const handleRemove = () => {
+    onRemove(id);
   };
 
   const getWordCount = () => {
@@ -97,22 +98,38 @@ const TextBlock: React.FC<TextBlockProps> = ({
     return localText.length;
   };
 
-  const associatedStats = getAssociatedParagraphsStats();
+  const getAppliedColor = () => {
+    if (!applied || !appliedColor) {
+      return APPLIED_COLORS[0];
+    }
+    
+    const colorIndex = parseInt(appliedColor);
+    return APPLIED_COLORS[colorIndex] || APPLIED_COLORS[0];
+  };
+
+  const appliedColorScheme = getAppliedColor();
 
   return (
-    <Card className={`transition-all duration-200 hover:shadow-md bg-card text-card-foreground ${
-      block.isTitle 
-        ? 'border-l-4 border-l-amber-400 dark:border-l-amber-500' 
-        : 'border-l-4 border-l-blue-400 dark:border-l-blue-500'
-    }`}>
+    <Card 
+      ref={ref}
+      className={`transition-all duration-200 hover:shadow-md bg-card text-card-foreground ${
+        isTitle 
+          ? 'border-l-4 border-l-amber-400 dark:border-l-amber-500' 
+          : 'border-l-4 border-l-blue-400 dark:border-l-blue-500'
+      } ${
+        applied ? `${appliedColorScheme.bg} ring-2 ${appliedColorScheme.ring}` : ''
+      }`}
+    >
       {/* Header */}
       <div className={`flex items-center justify-between p-3 rounded-t-lg border-b ${
-        block.isTitle 
+        isTitle 
           ? 'bg-amber-100 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' 
           : 'bg-blue-100 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+      } ${
+        applied ? appliedColorScheme.bg : ''
       }`}>
         <div className="flex items-center gap-2">
-          {block.isTitle && (
+          {isTitle && (
             <Button
               variant="ghost"
               size="sm"
@@ -124,57 +141,76 @@ const TextBlock: React.FC<TextBlockProps> = ({
           )}
           
           <div className="flex items-center gap-2">
-            <Hash className={`w-4 h-4 ${block.isTitle ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'}`} />
+            <Hash className={`w-4 h-4 ${
+              applied ? appliedColorScheme.icon : 
+              isTitle ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'
+            }`} />
             <span className={`font-medium ${
-              block.isTitle ? 'text-amber-800 dark:text-amber-300' : 'text-blue-800 dark:text-blue-300'
+              applied ? appliedColorScheme.text :
+              isTitle ? 'text-amber-800 dark:text-amber-300' : 'text-blue-800 dark:text-blue-300'
             }`}>
-              {block.isTitle ? `Title ${block.titleNumber}` : `Paragraph ${block.number}`}
+              {isTitle ? `Título ${titleNumber}` : `Párrafo ${number}`}
+              {applied && <Check className="w-4 h-4 inline ml-1" />}
             </span>
           </div>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDelete(block.id)}
-          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 h-auto"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <Textarea
-          ref={textareaRef}
-          value={localText}
-          onChange={handleTextChange}
-          placeholder={block.isTitle ? "Enter title text..." : "Enter paragraph text..."}
-          className={`min-h-[60px] resize-none ${
-            block.isTitle 
-              ? 'font-semibold text-lg bg-amber-50/50 dark:bg-amber-900/10' 
-              : 'bg-blue-50/50 dark:bg-blue-900/10'
-          }`}
-          style={{ height: 'auto' }}
-        />
-
-        {/* Statistics */}
-        <div className={`mt-3 text-sm ${
-          block.isTitle 
-            ? 'text-amber-700 dark:text-amber-400' 
-            : 'text-blue-700 dark:text-blue-400'
-        }`}>
-          <span>Words: {getWordCount()} | Characters: {getCharCount()}</span>
-          {associatedStats && (
-            <span className="ml-4">
-              | Paragraphs: {associatedStats.count} 
-              (Words: {associatedStats.words}, Characters: {associatedStats.chars})
-            </span>
+        <div className="flex items-center gap-2">
+          {applied ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRemove}
+              className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 p-1 h-auto"
+            >
+              Quitar
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleApply}
+              className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 p-1 h-auto"
+            >
+              Aplicar
+            </Button>
           )}
         </div>
       </div>
+
+      {/* Content */}
+      {!isCollapsed && (
+        <div className="p-4">
+          <Textarea
+            ref={textareaRef}
+            value={localText}
+            onChange={handleTextChange}
+            placeholder={isTitle ? "Ingresa el texto del título..." : "Ingresa el texto del párrafo..."}
+            className={`min-h-[60px] resize-none ${
+              isTitle 
+                ? 'font-semibold text-lg bg-amber-50/50 dark:bg-amber-900/10' 
+                : 'bg-blue-50/50 dark:bg-blue-900/10'
+            } ${
+              applied ? appliedColorScheme.bg : ''
+            }`}
+            style={{ height: 'auto' }}
+          />
+
+          {/* Statistics */}
+          <div className={`mt-3 text-sm ${
+            applied ? appliedColorScheme.text :
+            isTitle 
+              ? 'text-amber-700 dark:text-amber-400' 
+              : 'text-blue-700 dark:text-blue-400'
+          }`}>
+            <span>Palabras: {getWordCount()} | Caracteres: {getCharCount()}</span>
+          </div>
+        </div>
+      )}
     </Card>
   );
-};
+});
+
+TextBlock.displayName = 'TextBlock';
 
 export default TextBlock;
