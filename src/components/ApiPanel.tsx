@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Send, Settings, ChevronDown, ChevronRight, Copy, Check } from 'lucide-react';
+import { Send, Settings, ChevronDown, ChevronRight, Copy, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,6 +32,7 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState('');
   const [copied, setCopied] = useState(false);
+  const [requestMethod, setRequestMethod] = useState('POST');
 
   // Get applied paragraphs
   const appliedParagraphs = textBlocks.filter(block => block.applied && !block.isTitle);
@@ -66,6 +67,11 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
         headers = JSON.parse(customHeaders);
       } catch (e) {
         headers = { "Content-Type": "application/json" };
+        toast({
+          title: "Advertencia",
+          description: "Headers inválidos, usando Content-Type por defecto",
+          variant: "destructive"
+        });
       }
 
       // Add API key to headers if provided
@@ -81,14 +87,26 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
           number: p.number
         })),
         totalParagraphs: appliedParagraphs.length,
-        totalCharacters: appliedContent.length
+        totalCharacters: appliedContent.length,
+        timestamp: new Date().toISOString()
       };
 
+      console.log('Enviando petición a:', apiUrl);
+      console.log('Headers:', headers);
+      console.log('Body:', requestBody);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: requestMethod,
         headers,
-        body: JSON.stringify(requestBody)
+        body: requestMethod !== 'GET' ? JSON.stringify(requestBody) : undefined,
+        signal: controller.signal,
+        mode: 'cors', // Explicitly set CORS mode
       });
+
+      clearTimeout(timeoutId);
 
       const responseText = await response.text();
       let formattedResponse = '';
@@ -100,7 +118,12 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
         formattedResponse = responseText;
       }
 
-      setResponse(formattedResponse);
+      // Add response details
+      const responseDetails = `Status: ${response.status} ${response.statusText}\n` +
+        `Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}\n\n` +
+        `Body:\n${formattedResponse}`;
+
+      setResponse(responseDetails);
 
       if (response.ok) {
         toast({
@@ -110,17 +133,44 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
       } else {
         toast({
           title: "Advertencia",
-          description: `La API respondió con código ${response.status}`,
+          description: `La API respondió con código ${response.status}: ${response.statusText}`,
           variant: "destructive"
         });
       }
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      setResponse(`Error: ${errorMessage}`);
+      let errorMessage = 'Error desconocido';
+      let errorDetails = '';
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Timeout: La petición tardó más de 30 segundos';
+          errorDetails = 'La API no respondió a tiempo. Verifica que la URL sea correcta y que el servidor esté funcionando.';
+        } else if (error.message === 'Failed to fetch') {
+          errorMessage = 'Error de conexión (CORS/Red)';
+          errorDetails = `Posibles causas:
+• La API no permite peticiones desde este dominio (Error CORS)
+• La URL no es válida o no existe
+• El servidor está caído
+• Problemas de conectividad
+
+Soluciones sugeridas:
+• Verifica que la URL sea correcta
+• Asegúrate de que la API permita peticiones CORS desde tu dominio
+• Prueba con una API de prueba como httpbin.org/post
+• Contacta al administrador de la API para configurar CORS`;
+        } else {
+          errorMessage = error.message;
+          errorDetails = 'Error inesperado durante la petición';
+        }
+      }
+
+      const errorResponse = `ERROR: ${errorMessage}\n\nDetalles:\n${errorDetails}\n\nURL intentada: ${apiUrl}\nMétodo: ${requestMethod}`;
+      setResponse(errorResponse);
+      
       toast({
-        title: "Error",
-        description: `Error al hacer la petición: ${errorMessage}`,
+        title: "Error de conexión",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -148,6 +198,14 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
     }
   };
 
+  const testWithHttpbin = () => {
+    setApiUrl('https://httpbin.org/post');
+    toast({
+      title: "URL de prueba configurada",
+      description: "httpbin.org es perfecto para probar peticiones API"
+    });
+  };
+
   return (
     <Card className="shadow-lg border bg-card text-card-foreground backdrop-blur-sm">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -168,18 +226,45 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
         
         <CollapsibleContent>
           <div className="p-4 pt-0 space-y-4">
+            {/* CORS Warning */}
+            <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md">
+              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div className="text-sm text-amber-800 dark:text-amber-200">
+                <p className="font-medium mb-1">Problemas comunes de CORS:</p>
+                <p>Si obtienes "Failed to fetch", la API debe permitir peticiones desde este dominio.</p>
+              </div>
+            </div>
+
             {/* API Configuration */}
             <div className="space-y-3">
-              <div>
-                <Label htmlFor="api-url" className="text-sm font-medium">URL de la API</Label>
-                <Input
-                  id="api-url"
-                  value={apiUrl}
-                  onChange={(e) => setApiUrl(e.target.value)}
-                  placeholder="https://api.ejemplo.com/procesar"
-                  className="mt-1"
-                />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Label htmlFor="api-url" className="text-sm font-medium">URL de la API</Label>
+                  <Input
+                    id="api-url"
+                    value={apiUrl}
+                    onChange={(e) => setApiUrl(e.target.value)}
+                    placeholder="https://api.ejemplo.com/procesar"
+                    className="mt-1"
+                  />
+                </div>
+                <div className="w-24 pt-6">
+                  <select
+                    value={requestMethod}
+                    onChange={(e) => setRequestMethod(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-background text-foreground"
+                  >
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="PATCH">PATCH</option>
+                    <option value="GET">GET</option>
+                  </select>
+                </div>
               </div>
+
+              <Button onClick={testWithHttpbin} variant="outline" size="sm" className="gap-2">
+                🧪 Usar httpbin.org para pruebas
+              </Button>
 
               <div>
                 <Label htmlFor="api-key" className="text-sm font-medium">API Key (opcional)</Label>
@@ -232,7 +317,7 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  Enviar a API
+                  Enviar a API ({requestMethod})
                 </>
               )}
             </Button>
@@ -255,7 +340,7 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
                 <Textarea
                   value={response}
                   readOnly
-                  className="h-32 font-mono text-sm bg-muted"
+                  className="h-40 font-mono text-sm bg-muted"
                 />
               </div>
             )}
@@ -266,6 +351,7 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
               <p>1. Selecciona párrafos y presiona "Aplicar" para marcarlos</p>
               <p>2. Configura la URL de tu API y headers si es necesario</p>
               <p>3. Los párrafos aplicados se enviarán automáticamente en formato JSON</p>
+              <p className="mt-2 text-amber-600 dark:text-amber-400"><strong>💡 Tip:</strong> Si hay errores CORS, contacta al administrador de la API</p>
             </div>
           </div>
         </CollapsibleContent>
