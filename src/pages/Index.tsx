@@ -5,7 +5,7 @@ import TextBlock from "@/components/TextBlock";
 import OutlinePanel from "@/components/OutlinePanel";
 import StatsPanel from "@/components/StatsPanel";
 import ApiPanel from "@/components/ApiPanel";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface TextElement {
   id: string;
