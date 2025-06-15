@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import TextBlock from '@/components/TextBlock';
 import StatsPanel from '@/components/StatsPanel';
 import OutlinePanel from '@/components/OutlinePanel';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface TextElement {
   id: string;
@@ -409,12 +410,12 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Selection Popup */}
       {showSelectionPopup && (
-        <div className="fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg border p-4 min-w-[250px]">
+        <div className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border dark:border-gray-700 p-4 min-w-[250px]">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-800">Párrafos Seleccionados</h3>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">Párrafos Seleccionados</h3>
             <Button
               variant="ghost"
               size="sm"
@@ -426,15 +427,15 @@ const Index = () => {
           </div>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">Párrafos:</span>
-              <span className="font-medium">{selectedParagraphs.size}</span>
+              <span className="text-gray-600 dark:text-gray-400">Párrafos:</span>
+              <span className="font-medium dark:text-gray-200">{selectedParagraphs.size}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Caracteres totales:</span>
-              <span className="font-medium text-blue-600">{getSelectedCharacterCount()}</span>
+              <span className="text-gray-600 dark:text-gray-400">Caracteres totales:</span>
+              <span className="font-medium text-blue-600 dark:text-blue-400">{getSelectedCharacterCount()}</span>
             </div>
           </div>
-          <div className="mt-3 pt-2 border-t">
+          <div className="mt-3 pt-2 border-t dark:border-gray-700">
             <Button
               onClick={applyToSelectedParagraphs}
               className="w-full bg-green-600 hover:bg-green-700 gap-2"
@@ -445,7 +446,7 @@ const Index = () => {
             </Button>
           </div>
           <div className="mt-2">
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               Selecciona párrafos desde el panel lateral para ver el conteo total
             </div>
           </div>
@@ -455,12 +456,15 @@ const Index = () => {
       {/* Main container with two-panel layout */}
       <div className="container mx-auto p-6 h-screen flex flex-col">
         {/* Header */}
-        <div className="text-center space-y-2 mb-6">
-          <h1 className="text-4xl font-bold text-gray-800 flex items-center justify-center gap-3">
-            <FileText className="text-blue-600" />
+        <div className="text-center space-y-2 mb-6 relative">
+          <div className="absolute top-0 right-0">
+            <ThemeToggle />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 flex items-center justify-center gap-3">
+            <FileText className="text-blue-600 dark:text-blue-400" />
             Text Block Editor
           </h1>
-          <p className="text-gray-600">Advanced paragraph and title management system</p>
+          <p className="text-gray-600 dark:text-gray-400">Advanced paragraph and title management system</p>
         </div>
 
         {/* File Operations */}
@@ -506,13 +510,13 @@ const Index = () => {
           {/* Left Panel - Main Content */}
           <div className="flex-1 flex flex-col space-y-6 min-w-0">
             {/* Original Text Section */}
-            <Card className="p-6 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Original Text</h2>
+            <Card className="p-6 shadow-lg border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Original Text</h2>
               <Textarea
                 value={originalText}
                 onChange={(e) => setOriginalText(e.target.value)}
                 placeholder="Paste or type your text here..."
-                className="min-h-[150px] text-base resize-none border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="min-h-[150px] text-base resize-none border-gray-200 dark:border-gray-700 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:bg-gray-900 dark:text-gray-200"
               />
               <div className="flex gap-3 mt-4">
                 <Button onClick={createParagraphs} className="bg-green-600 hover:bg-green-700 gap-2">
@@ -534,11 +538,11 @@ const Index = () => {
             </Card>
 
             {/* Text Blocks Section */}
-            <Card className="flex-1 p-6 shadow-lg border-0 bg-white/80 backdrop-blur-sm min-h-0">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Editable Blocks</h2>
+            <Card className="flex-1 p-6 shadow-lg border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm min-h-0">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Editable Blocks</h2>
               <div className="space-y-4 h-full overflow-y-auto pr-2">
                 {textBlocks.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
                     <p>No text blocks yet. Create paragraphs from the text above.</p>
                   </div>
