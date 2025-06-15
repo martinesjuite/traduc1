@@ -36,9 +36,21 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
   const [requestMethod, setRequestMethod] = useState('POST');
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Get applied paragraphs
-  const appliedParagraphs = textBlocks.filter(block => block.applied && !block.isTitle);
-  const appliedContent = appliedParagraphs.map(block => block.text).join('\n\n');
+  // Get applied paragraphs AND titles
+  const appliedBlocks = textBlocks.filter(block => block.applied);
+  const appliedParagraphs = appliedBlocks.filter(block => !block.isTitle);
+  const appliedTitles = appliedBlocks.filter(block => block.isTitle);
+  
+  // Create content with titles and paragraphs in order
+  const appliedContent = appliedBlocks
+    .sort((a, b) => {
+      // Sort by the original order in textBlocks
+      const indexA = textBlocks.findIndex(block => block.id === a.id);
+      const indexB = textBlocks.findIndex(block => block.id === b.id);
+      return indexA - indexB;
+    })
+    .map(block => block.text)
+    .join('\n\n');
 
   const handleSendRequest = async () => {
     if (!apiUrl) {
@@ -50,10 +62,10 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
       return;
     }
 
-    if (appliedParagraphs.length === 0) {
+    if (appliedBlocks.length === 0) {
       toast({
         title: "Error",
-        description: "No hay párrafos aplicados para enviar",
+        description: "No hay elementos aplicados para enviar",
         variant: "destructive"
       });
       return;
@@ -85,11 +97,25 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
 
       const requestBody = {
         content: appliedContent,
+        elements: appliedBlocks.map(block => ({
+          id: block.id,
+          text: block.text,
+          isTitle: block.isTitle,
+          number: block.number,
+          titleNumber: block.titleNumber
+        })),
+        titles: appliedTitles.map(title => ({
+          id: title.id,
+          text: title.text,
+          titleNumber: title.titleNumber
+        })),
         paragraphs: appliedParagraphs.map(p => ({
           id: p.id,
           text: p.text,
           number: p.number
         })),
+        totalElements: appliedBlocks.length,
+        totalTitles: appliedTitles.length,
         totalParagraphs: appliedParagraphs.length,
         totalCharacters: appliedContent.length,
         timestamp: new Date().toISOString()
@@ -155,7 +181,7 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
       if (response.ok) {
         toast({
           title: "Éxito",
-          description: `Petición enviada correctamente. ${appliedParagraphs.length} párrafos procesados.`
+          description: `Petición enviada correctamente. ${appliedBlocks.length} elementos procesados (${appliedTitles.length} títulos, ${appliedParagraphs.length} párrafos).`
         });
       } else {
         toast({
@@ -270,9 +296,10 @@ Soluciones sugeridas:
             <div className="flex items-center gap-2">
               <Send className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <h2 className="text-lg font-semibold">API Request Panel</h2>
-              {appliedParagraphs.length > 0 && (
+              {appliedBlocks.length > 0 && (
                 <div className="ml-2 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
-                  {appliedParagraphs.length} párrafos listos
+                  {appliedBlocks.length} elementos listos
+                  {appliedTitles.length > 0 && ` (${appliedTitles.length} títulos)`}
                 </div>
               )}
             </div>
@@ -347,12 +374,12 @@ Soluciones sugeridas:
             </div>
 
             {/* Content Preview */}
-            {appliedParagraphs.length > 0 && (
+            {appliedBlocks.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Contenido a enviar:</Label>
                 <div className="p-3 bg-muted rounded-md max-h-32 overflow-y-auto">
                   <p className="text-sm text-muted-foreground mb-2">
-                    {appliedParagraphs.length} párrafos • {appliedContent.length} caracteres
+                    {appliedBlocks.length} elementos • {appliedTitles.length} títulos • {appliedParagraphs.length} párrafos • {appliedContent.length} caracteres
                   </p>
                   <p className="text-sm line-clamp-3">{appliedContent.substring(0, 200)}...</p>
                 </div>
@@ -362,7 +389,7 @@ Soluciones sugeridas:
             {/* Send Button */}
             <Button 
               onClick={handleSendRequest} 
-              disabled={isLoading || appliedParagraphs.length === 0}
+              disabled={isLoading || appliedBlocks.length === 0}
               className="w-full gap-2"
             >
               {isLoading ? (
@@ -445,9 +472,9 @@ Soluciones sugeridas:
             {/* Help Text */}
             <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-md">
               <p className="mb-1"><strong>Cómo usar:</strong></p>
-              <p>1. Selecciona párrafos y presiona "Aplicar" para marcarlos</p>
+              <p>1. Selecciona títulos y párrafos, luego presiona "Aplicar" para marcarlos</p>
               <p>2. Configura la URL de tu API y headers si es necesario</p>
-              <p>3. Los párrafos aplicados se enviarán automáticamente en formato JSON</p>
+              <p>3. Los elementos aplicados (títulos y párrafos) se enviarán automáticamente en formato JSON</p>
               <p>4. Si la API devuelve un archivo MP3, aparecerá un reproductor de audio</p>
               <p className="mt-2 text-amber-600 dark:text-amber-400"><strong>💡 Tip:</strong> Si hay errores CORS, contacta al administrador de la API</p>
             </div>
