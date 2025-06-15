@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import TextBlock from '@/components/TextBlock';
 import StatsPanel from '@/components/StatsPanel';
 import OutlinePanel from '@/components/OutlinePanel';
+import ApiPanel from '@/components/ApiPanel';
 import ThemeToggle from '@/components/ThemeToggle';
 
 interface TextElement {
@@ -17,7 +18,7 @@ interface TextElement {
   titleNumber?: number;
   visible: boolean;
   applied?: boolean;
-  appliedColor?: string; // Nueva propiedad para el color asignado
+  appliedColor?: string;
 }
 
 const Index = () => {
@@ -572,6 +573,9 @@ const Index = () => {
 
             {/* Statistics Panel */}
             <StatsPanel textBlocks={textBlocks} />
+
+            {/* API Panel */}
+            <ApiPanel textBlocks={textBlocks} />
           </div>
 
           {/* Right Panel - Outline */}
