@@ -41,7 +41,7 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
   const appliedParagraphs = appliedBlocks.filter(block => !block.isTitle);
   const appliedTitles = appliedBlocks.filter(block => block.isTitle);
   
-  // Create content with titles and paragraphs in order
+  // Create content with titles and paragraphs in order, removing first 2 characters from titles
   const appliedContent = appliedBlocks
     .sort((a, b) => {
       // Sort by the original order in textBlocks
@@ -49,7 +49,13 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
       const indexB = textBlocks.findIndex(block => block.id === b.id);
       return indexA - indexB;
     })
-    .map(block => block.text)
+    .map(block => {
+      // Remove first 2 characters from titles (the numbering)
+      if (block.isTitle) {
+        return block.text.substring(2);
+      }
+      return block.text;
+    })
     .join('\n\n');
 
   const handleSendRequest = async () => {
@@ -99,14 +105,14 @@ const ApiPanel: React.FC<ApiPanelProps> = ({ textBlocks }) => {
         content: appliedContent,
         elements: appliedBlocks.map(block => ({
           id: block.id,
-          text: block.text,
+          text: block.isTitle ? block.text.substring(2) : block.text, // Remove first 2 chars from titles
           isTitle: block.isTitle,
           number: block.number,
           titleNumber: block.titleNumber
         })),
         titles: appliedTitles.map(title => ({
           id: title.id,
-          text: title.text,
+          text: title.text.substring(2), // Remove first 2 characters from title text
           titleNumber: title.titleNumber
         })),
         paragraphs: appliedParagraphs.map(p => ({
