@@ -64,6 +64,20 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
     return paragraphIndex < firstTitleIndex;
   };
 
+  // Función para obtener el número de intro de un párrafo antes del primer título
+  const getIntroNumber = (paragraphIndex: number) => {
+    let introCount = 1;
+    for (let i = 0; i < paragraphIndex; i++) {
+      if (!textBlocks[i].isTitle) {
+        if (isParagraphBeforeFirstTitle(i)) {
+          if (i === paragraphIndex) return introCount;
+          introCount++;
+        }
+      }
+    }
+    return introCount;
+  };
+
   const getAssociatedParagraphs = (titleIndex: number) => {
     const paragraphs = [];
     for (let i = titleIndex + 1; i < textBlocks.length; i++) {
@@ -159,6 +173,7 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
         // Standalone paragraph (not under any title)
         const appliedColor = getAppliedColor(block);
         const isBeforeFirstTitle = isParagraphBeforeFirstTitle(index);
+        const introNumber = isBeforeFirstTitle ? getIntroNumber(index) : null;
         
         items.push(
           <div
@@ -189,7 +204,7 @@ const OutlinePanel: React.FC<OutlinePanelProps> = ({
                 block.applied ? appliedColor.text : 
                 isBeforeFirstTitle ? 'text-gray-600 dark:text-gray-400' : 'text-blue-700 dark:text-blue-300'
               }`}>
-                Párrafo {block.number}
+                {isBeforeFirstTitle ? `Intro ${introNumber}` : `Párrafo ${block.number}`}
                 {block.applied && <span className="ml-1">✓</span>}
               </div>
               <div className={`text-xs truncate ${
